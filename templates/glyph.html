@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Charbase {{ glyph.hexId }}: {{ glyph.name|escape }}</title>
+	<link rel="stylesheet" type="text/css" href="static/iphone.css" media="only screen and (max-device-width: 480px)" />
+	<link rel="stylesheet" type="text/css" href="static/desktop.css" media="screen and (min-device-width: 481px)" />
+	<!--[if IE]>
+	<link rel="stylesheet" type="text/css" href="static/desktop.css" media="all" />
+	<![endif]-->
+
+	<meta name="viewport" content="user-scalable=no, width=device-width" />
+	<meta name="format-detection" content="telephone=no" />
+</head>
+<body>
+	<div id="header">
+	<h1><a href="/">Charbase</a></h1>
+	<h2>A visual unicode database</h2>
+	<form method="GET" action="/">
+		<input class="search" type="search" name="search" results="5" value="{{ search|escape }}" placeholder="Search" />
+	</form>
+	</div>
+	
+	<div id="main">
+	<h2>{{ glyph.hexId }}: {{ glyph.name|escape }}</h2>
+	
+	<div class="navigation">
+		{% if previous %}
+		<a class="prev" href="{{ previous.link }}">&larr; {{ previous.hexId }} {{ previous.name }}</a>
+		{% endif %}
+		{% if next %}
+		<a class="next" href="{{ next.link }}">{{ next.hexId }} {{ next.name }} &rarr; </a>
+		{% endif %}
+	</div>
+
+	<div class="span-6">	
+	<div class="big-glyph-box">
+		<img src="/images/glyph/{{ glyph.id }}" width="200" height="200" />
+	</div>
+	<div class="glyph-buttons">
+		<script type="text/javascript" src="http://tweetmeme.com/i/scripts/button.js"></script>
+	</div>
+	</div>
+	
+	<div class="unicode-properties">
+	<table class="unicode-properties">
+	{% if glyph.char %}
+	<tr><th>Your Browser</th><td class="char">{{ glyph.char|escape }}</td></tr>
+	{% else %}
+	<tr><th>Your Browser</th><td>n/a</td></tr>
+	{% endif %}
+	{% if glyph.decomposition %}
+	<tr><th>Decomposition</th><td><span class="char">{{ glyph.decomposition|escape }}</span>
+	<br />
+	{% for char in glyph.decompositionChars %}
+	<a href="{{ char.link }}" title="{{ char.name }}">{{ char.hexId }}</a> 
+	{% endfor %}
+	</td></tr>
+	{% endif %}
+	<tr><th>Index</th><td>{{ glyph.hexId }} ({{ glyph.id }})</td></tr>
+	<tr><th>Class</th><td>{{ glyph.class }}</td></tr>
+	{% if glyph.block %}
+	<tr><th>Block</th><td><a href="{{ glyph.blockLink }}">{{ glyph.block }}</a></td></tr>
+	{% endif %}
+	{% if glyph.numericValue %}
+	<tr><th>Numeric Value</th><td>{{ glyph.numericValue }}</td></tr>
+	{% endif %}
+	{% if glyph.cjkDefinition %}
+	<tr><th>Definition</th><td>{{ glyph.cjkDefinition }}</td></tr>
+	{% endif %}
+	<tr><th>Java Escape</th><td>{{ glyph.javaEscape }}</td></tr>
+	<tr><th>Javascript Escape</th><td>{{ glyph.javascriptEscape }}</td></tr>
+	<tr><th>Python Escape</th><td>{{ glyph.pythonEscape }}</td></tr>
+	<tr><th><a href="/html-entities">HTML Escapes</a></th><td>{{ glyph.htmlEscape|escape }}</td></tr>
+	<tr><th>URL Encoded</th><td>{{ glyph.urlEncoded|escape }}</td></tr>
+	<tr><th>UTF8</th><td>{{ glyph.utf8 }}</td></tr>
+	<tr><th>UTF16</th><td>{{ glyph.utf16 }}</td></tr>
+	</table>
+	</div>
+	
+	<div class="clear"></div>
+	</div>
+	
+    <div id="footer">
+    <p><a href="https://spreadsheets.google.com/viewform?formkey=dG53SmctNTJQRzkzYU1mSGxOVWJLVVE6MA">Contact Us</a></p>
+    </div>
+
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-198407-6']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(ga);
+  })();
+</script>
+	
+</body>
+</html>

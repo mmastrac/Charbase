@@ -1,0 +1,8 @@
+cron:
+- description: Refresh homepage
+  url: /
+  schedule: every 15 minutes
+- description: Refresh glyph page
+  url: /0067-unicode-latin-small-letter-g
+  schedule: every 15 minutes
+  

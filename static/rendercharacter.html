@@ -1,0 +1,79 @@
+<html>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF8"></meta>
+<body>
+<input type="text" id="start" value="0" />
+<button onclick="processChar(parseInt(document.getElementById('start').value))">Start</button>
+<button onclick="stop = true;">Stop</button>
+<br></br>
+<canvas id='glyph' style='border:1px solid black'></canvas>
+<canvas id='fallback' style='border:1px solid black'></canvas>
+<script>
+var canvas = document.getElementById('glyph');
+var size = 200;
+var stride = 1;
+var stop = false;
+
+var fallback = document.getElementById('fallback');
+fallback.width = size;
+fallback.height = size;
+
+var ctx = fallback.getContext('2d');
+ctx.font = "170px serif";
+ctx.strokeStyle = "black";
+var c = String.fromCharCode(0x11);
+var measure = ctx.measureText(c);
+ctx.fillText(c, (size - measure.width) / 2, 160);
+var fallbackExampleData = ctx.getImageData(0, 0, size, size).data;
+
+function processChar(start) {
+	if (stop)
+		return;
+	canvas.width = size * stride;
+	canvas.height = size;
+
+	for (var i = 0; i < stride; i++) {
+		var ctx = canvas.getContext('2d');
+		ctx.font = "170px serif";
+		ctx.strokeStyle = "black";
+		c = String.fromCharCode(start + i);
+		var measure = ctx.measureText(c);
+		ctx.fillText(c, (size * i) + (size - measure.width) / 2, 160);
+		var imageData = ctx.getImageData(0, 0, size, size).data;
+
+		var same = true;
+		for (var j = 0; j < fallbackExampleData.length; j++) {
+			if (fallbackExampleData[j] != imageData[j]) {
+				var x = Math.floor((j % 800) / 4);
+				var y = Math.floor(j / 800);
+
+				if (x > 96 && x < 104 && y > 90 && y < 104)
+					continue;
+				
+				same = false;
+				break;
+			}
+		}
+
+		if (same) {
+			// ignore this char
+			setTimeout(function() {
+				processChar(start + stride);
+			}, 1);
+			return;
+		}
+	}
+
+	var imageData = ctx.getImageData(0, 0, size, size);
+
+	var req = new XMLHttpRequest();
+	req.open("POST", "/save?" + start);
+	req.onreadystatechange = function() {
+		if (req.readyState == 4) {
+			processChar(start + stride);
+		}
+	}
+	req.send(canvas.toDataURL());
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+
+body { 
+	font-family: 'Lucida Grande', 'Lucida Sans', Helvetica, Arial, Tahoma, Verdana, sans-serif; 
+	font-size: 12px;
+	color: #111;
+	background: #eee;
+}
+
+#header h1, #header h2 {
+	font-size: 15px;
+	margin: 0;
+}
+
+
+.top-characters td.char {
+	font-size: 40px;
+}
+
+
+td.char {
+	font-size: 40px;
+}
