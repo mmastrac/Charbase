@@ -5,7 +5,6 @@ As this was written pre-Blobstore, the images for the characters are rendered us
 static files that are pushed to the server. This should be rewritten to store the glyph images in the blobstore. There's a lot of work that could be done on character generation 
 as well - some of the glyphs are clipped by the box.
 
-The current code doesn't support anything outside of the Basic Multilingual Plane.
 
 Todo list:
 
