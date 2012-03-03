@@ -175,7 +175,7 @@ class UnicodeData():
             'link': '/%s-unicode-%s' % (data[0].lower(), self.name_to_slug(name)),
             'class': "%s (%s)" % (unicode_classes[data[2]], data[2]),
             'block': block,
-            'blockLink': '/block/%s' % self.name_to_slug(block),
+            'blockLink': block and '/block/%s' % self.name_to_slug(block),
             'numericValue': data[8],
             'cjkDefinition': cjk_definition,
             'decomposition': decomposition,
