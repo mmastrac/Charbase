@@ -5,6 +5,7 @@
 <button onclick="processChar(parseInt(document.getElementById('start').value))">Start</button>
 <button onclick="stop = true;">Stop</button>
 <br></br>
+<div><span id="current"></span>: <span id="character"></span></div>
 <canvas id='glyph' style='border:1px solid black'></canvas>
 <canvas id='fallback' style='border:1px solid black'></canvas>
 <script>
@@ -12,6 +13,7 @@ var canvas = document.getElementById('glyph');
 var size = 200;
 var stride = 1;
 var stop = false;
+var minFontSize = 100;
 
 var fallback = document.getElementById('fallback');
 fallback.width = size;
@@ -20,7 +22,7 @@ fallback.height = size;
 var ctx = fallback.getContext('2d');
 ctx.font = "170px serif";
 ctx.strokeStyle = "black";
-var c = String.fromCharCode(0x11);
+var c = String.fromCharCode(0x821);
 var measure = ctx.measureText(c);
 ctx.fillText(c, (size - measure.width) / 2, 160);
 var fallbackExampleData = ctx.getImageData(0, 0, size, size).data;
@@ -28,38 +30,72 @@ var fallbackExampleData = ctx.getImageData(0, 0, size, size).data;
 function processChar(start) {
 	if (stop)
 		return;
-	canvas.width = size * stride;
-	canvas.height = size;
-
+	if (start == 0x30000)
+		return;
 	for (var i = 0; i < stride; i++) {
-		var ctx = canvas.getContext('2d');
-		ctx.font = "170px serif";
-		ctx.strokeStyle = "black";
-		c = String.fromCharCode(start + i);
-		var measure = ctx.measureText(c);
-		ctx.fillText(c, (size * i) + (size - measure.width) / 2, 160);
-		var imageData = ctx.getImageData(0, 0, size, size).data;
+		document.getElementById('current').innerText = (start + i).toString(16);
+		
+		loop:
+		for (var fontSize = 170; fontSize >= minFontSize; fontSize -= 10) {
+			canvas.width = size * stride;
+			canvas.height = size;
+			
+			var ctx = canvas.getContext('2d');
+			ctx.font = fontSize + "px serif";
+			ctx.strokeStyle = "black";
+			
+			document.getElementById('character').innerHTML = "&#" + (start + i) + ";";
+			c = document.getElementById('character').innerText; // String.fromCharCode(start + i);
+			var measure = ctx.measureText(c);
+			ctx.fillText(c, (size * i) + (size - measure.width) / 2, 160);
+			var imageData = ctx.getImageData(0, 0, size, size).data;
 
-		var same = true;
-		for (var j = 0; j < fallbackExampleData.length; j++) {
-			if (fallbackExampleData[j] != imageData[j]) {
-				var x = Math.floor((j % 800) / 4);
-				var y = Math.floor(j / 800);
-
-				if (x > 96 && x < 104 && y > 90 && y < 104)
-					continue;
-				
-				same = false;
-				break;
+			var same = true;
+			for (var j = 0; j < fallbackExampleData.length; j++) {
+				if (fallbackExampleData[j] != imageData[j]) {
+					var x = Math.floor((j % 800) / 4);
+					var y = Math.floor(j / 800);
+	
+/* 					if (x > 96 && x < 104 && y > 90 && y < 104)
+						continue;
+ */					
+					same = false;
+					break;
+				}
 			}
-		}
-
-		if (same) {
-			// ignore this char
-			setTimeout(function() {
-				processChar(start + stride);
-			}, 1);
-			return;
+			
+			var allZero = true;
+			for (var j = 0; j < imageData.length; j++) {
+				if (imageData[j]) {
+					allZero = false;
+					break;
+				}
+			}
+			
+			// Did any pixels get set outside the safe zone?
+			if (fontSize > minFontSize) {
+				var top = ctx.getImageData(0, 0, size, 1).data;
+				var left = ctx.getImageData(0, 0, 1, size).data;
+				var bottom = ctx.getImageData(0, size - 1, size, 1).data;
+				var right = ctx.getImageData(size - 1, 0, 1, size).data;
+	
+				for (var j = 0; j < size * 4; j++) {
+					if (left[j] || top[j] || right[j] || bottom[j]) {
+						console.log("Overflow: " + fontSize);
+						continue loop;
+					}
+				}
+			}
+			
+			if (same || allZero) {
+				// ignore this char
+				setTimeout(function() {
+					processChar(start + stride);
+				}, 1);
+				return;
+			}
+			
+			break;
 		}
 	}
 
