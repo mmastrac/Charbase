@@ -41,24 +41,24 @@ class UnicodeData():
 
     def get_unicode_zip(self):
         if not self.cached_unicode_zip:
-            self.cached_unicode_zip = zipimport.zipimporter("UCD-5.2.0.zip")
+            self.cached_unicode_zip = zipimport.zipimporter("UCD-6.1.0.zip")
             
         return self.cached_unicode_zip
 
     def get_unihan_zip(self):
         if not self.cached_unihan_zip:
-            self.cached_unihan_zip = zipimport.zipimporter("Unihan-5.2.0.zip")
+            self.cached_unihan_zip = zipimport.zipimporter("Unihan-6.1.0.zip")
             
         return self.cached_unihan_zip
 
     def get_unicode_data(self, id):
-        RANGE_SIZE = 35000
+        RANGE_SIZE = 30000
         range = id // RANGE_SIZE
         
         if self.cached_unicode_data.has_key(range):
             return self.cached_unicode_data[range]
         
-        self.cached_unicode_data[range] = memcache.get("cached_unicode_data.%s" % range)
+        self.cached_unicode_data[range] = memcache.get("cached_unicode_data.%s.%s" % (RANGE_SIZE, range))
         if self.cached_unicode_data[range]:
             return self.cached_unicode_data[range]
         
@@ -71,7 +71,7 @@ class UnicodeData():
                 unicode_data[id // RANGE_SIZE][id] = line
 
         for key in unicode_data:
-            memcache.add("cached_unicode_data.%s" % key, unicode_data[key], MEMCACHE_DATA_TIMEOUT)
+            memcache.add("cached_unicode_data.%s.%s" % (RANGE_SIZE, key), unicode_data[key], MEMCACHE_DATA_TIMEOUT)
         self.cached_unicode_data = unicode_data
         return self.cached_unicode_data[range]
 
@@ -83,7 +83,7 @@ class UnicodeData():
             unicode_classes = {}
             for line in self.get_unicode_zip().get_data("PropertyValueAliases.txt").split('\n'):
                 if line[:4] == "gc ;":
-                    unicode_classes[line[5:7].strip()] = line[17:45].strip().replace("_", " ")
+                    unicode_classes[line[5:7].strip()] = line.split("; ")[2].strip().replace("_", " ")
             self.cached_unicode_classes = unicode_classes
             memcache.add("cached_unicode_classes", self.cached_unicode_classes, MEMCACHE_DATA_TIMEOUT)
             
