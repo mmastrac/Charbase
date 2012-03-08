@@ -32,7 +32,7 @@
 	
 	<table class="top-characters">
 	{% for glyph in top_chars %}
-	<tr><td class="char"><a href="{{ glyph.link }}">{{ glyph.char|escape }}</a></td><td><a href="{{ glyph.link }}">{{ glyph.name }}</a></td></tr>
+	<tr><td class="char"><a href="{{ glyph.link }}"><img width="80" src="/images/glyph/{{ glyph.id }}"></a></td><td><a href="{{ glyph.link }}">{{ glyph.name }}</a></td></tr>
 	{% endfor %}
 	</table>
 	
