@@ -15,18 +15,27 @@
 	<div id="header">
 	<h1><a href="/">Charbase</a></h1>
 	<h2>A visual unicode database</h2>
-	<form method="GET" action="/">
-		<input class="search" type="search" name="search" results="5" value="{{ search|escape }}" placeholder="Search" />
+	<form method="GET" action="/" onsubmit="location.href='http://google.com/search?q=site:charbase.com+'+encodeURIComponent(document.getElementById('search').value); return false;">
+		<input class="search" type="search" name="search" id="search" results="5" value="{{ search|escape }}" placeholder="Search" />
 	</form>
 	</div>
 	
 	<div id="main">
 
 	<div class="description span-5 box last">
-		<p>Charbase is a visual database of Unicode characters. We've tried to make the information
-		available and highly accessible.</p>
-		<p>We hope you find this tool useful!</p>
+		<p>Charbase is a visual database of characters from the Unicode 6.1 standard, made available 
+		without clutter.</p>
 		<script type="text/javascript" src="http://tweetmeme.com/i/scripts/button.js"></script>
+		<g:plusone size="tall"></g:plusone>
+
+<!-- Place this render call where appropriate -->
+<script type="text/javascript">
+  (function() {
+    var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+    po.src = 'https://apis.google.com/js/plusone.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+  })();
+</script>
 	</div>
 	<h2>Popular Unicode Characters</h2>
 	

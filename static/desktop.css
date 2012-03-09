@@ -260,11 +260,10 @@ hr.space {background:#fff;color:#fff;}
 /* website */
 
 body { 
-	font-family: 'Lucida Grande', 'Lucida Sans', Helvetica, Arial, Tahoma, Verdana, sans-serif; 
+	font-family: 'Lucida Grande', 'Lucida Sans', Helvetica, Arial, Tahoma, Verdana, sans-serif, AppleColorEmoji; 
 	font-size: 12px;
-	color: #111;
 	padding: 2em;
-	background: #eee;
+	background: #f9f9f9;
 }
 
 p {
@@ -305,8 +304,6 @@ a:visited {
 }
 
 .box {
-	-webkit-box-shadow: 2px 2px 5px #ddd;
-	-moz-box-shadow: 2px 2px 5px #ddd;
 	box-shadow: 2px 2px 5px #ddd;
 }
 
@@ -412,13 +409,9 @@ table.unicode-properties {
 	margin: 0 auto;
 	padding: 1.5em;
 	background-color: white;
-	-webkit-border-radius: 6px 6px;
-	-moz-border-radius: 6px 6px;
 	border-radius: 6px 6px;
 	
 	border: 1px solid #ccc;
-	-webkit-box-shadow: 5px 5px 25px #ccc;
-	-moz-box-shadow: 5px 5px 25px #ccc;
 	box-shadow: 5px 5px 25px #ccc;
 	position: relative;
 }

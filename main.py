@@ -21,13 +21,30 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
 from google.appengine.ext import search
-from google.appengine.ext.webapp import template
+
+from google.appengine.dist import use_library
+use_library('django', '1.2')
+from django.template import loader
+from django.conf import settings
 
 IMAGE_BUNDLE_SIZE = 2500
 MEMCACHE_DATA_TIMEOUT = 24 * 60 * 60
 MEMCACHE_PAGE_TIMEOUT = 24 * 60 * 60
 
 image_zips = {}
+
+# No idea why this is needed. AppEngine's version of Django templates is wonky.
+try:
+  # Bypass Django's safe_join for template paths since App Engine sandboxes the
+  # filesystem anyway, and safe_join won't allow relative includes because
+  # webapp.template always sets the template's parent directory as the "root",
+  # rather than the app's real root directory.
+  from django.utils import _os
+  _os.safe_join = os.path.join
+except ImportError:
+  pass  # App is using a version of Django that doesn't use safe_join, it's OK.
+
+settings.configure(DEBUG=False, TEMPLATE_DIRS=(os.path.join(os.path.dirname(__file__), "templates")))
 
 class UnicodeData():     
     cached_unicode_data = {}
@@ -206,7 +223,7 @@ class MainPage(webapp.RequestHandler):
         
         path = os.path.join(os.path.dirname(__file__), 'templates/index.html')
         self.response.headers['Content-Type'] = 'text/html; charset=utf-8';
-        rendered_front_page = template.render(path, template_values)
+        rendered_front_page = loader.render_to_string(path, template_values)
         self.response.out.write(rendered_front_page)
 
 
@@ -219,7 +236,7 @@ class HtmlEntitiesPage(webapp.RequestHandler):
         
         path = os.path.join(os.path.dirname(__file__), 'templates/htmlentities.html')
         self.response.headers['Content-Type'] = 'text/html; charset=utf-8';
-        rendered_front_page = template.render(path, template_values)
+        rendered_front_page = loader.render_to_string(path, template_values)
         self.response.out.write(rendered_front_page)
 
 
@@ -241,7 +258,7 @@ class BlockPage(webapp.RequestHandler):
         
         path = os.path.join(os.path.dirname(__file__), 'templates/block.html')
         self.response.headers['Content-Type'] = 'text/html; charset=utf-8';
-        rendered_front_page = template.render(path, template_values)
+        rendered_front_page = loader.render_to_string(path, template_values)
         self.response.out.write(rendered_front_page)
 
 class GlyphPage(webapp.RequestHandler):
@@ -260,7 +277,7 @@ class GlyphPage(webapp.RequestHandler):
 
         path = os.path.join(os.path.dirname(__file__), 'templates/glyph.html')
         self.response.headers['Content-Type'] = 'text/html; charset=utf-8';
-        rendered_front_page = template.render(path, template_values)
+        rendered_front_page = loader.render_to_string(path, template_values)
         self.response.out.write(rendered_front_page)
 
 
@@ -281,6 +298,7 @@ class GlyphImage(webapp.RequestHandler):
             entity = datastore.Get(db.Key.from_path("glyph", glyphNumber))
             self.response.out.write(entity['data'])
             self.response.headers['Content-Type'] = 'image/png'
+            self.response.headers['Cache-Control'] = 'public, max-age=600'
             return
         except datastore_errors.EntityNotFoundError:
             pass

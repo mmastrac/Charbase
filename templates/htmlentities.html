@@ -15,9 +15,9 @@
 	<div id="header">
 	<h1><a href="/">Charbase</a></h1>
 	<h2>A visual unicode database</h2>
-	<form method="GET" action="/">
-		<input class="search" type="search" name="search" results="5" value="{{ search|escape }}" placeholder="Search" />
-	</form>
+        <form method="GET" action="/" onsubmit="location.href='http://google.com/search?q=site:charbase.com+'+encodeURIComponent(document.getElementById('search').value); return false;">
+                <input class="search" type="search" name="search" id="search" results="5" value="{{ search|escape }}" placeholder="Search" />
+        </form>
 	</div>
 	
 	<div id="main">

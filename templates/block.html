@@ -15,9 +15,9 @@
 	<div id="header">
 	<h1><a href="/">Charbase</a></h1>
 	<h2>A visual unicode database</h2>
-	<form method="GET" action="/">
-		<input class="search" type="search" name="search" results="5" value="{{ search|escape }}" placeholder="Search" />
-	</form>
+        <form method="GET" action="/" onsubmit="location.href='http://google.com/search?q=site:charbase.com+'+encodeURIComponent(document.getElementById('search').value); return false;">
+                <input class="search" type="search" name="search" id="search" results="5" value="{{ search|escape }}" placeholder="Search" />
+        </form>
 	</div>
 	
 	<div id="main">
@@ -28,10 +28,18 @@
 	<h2>{{ block }} Block</h2>
 	
 	<table class="html-entities">
+	<tr>
+	<th></th>
+	<th>Ref.<br>Image</th>
+	<th>Your<br>Browser</th>
+	<th></th>
+	<th></th>
+	</th>	
 	{% for glyph in entities %}
 	<tr>
 	<td><a href="{{ glyph.link }}">{{ glyph.hexId }}</a></td>
-	<td class="char">{{ glyph.char|escape }}</td>
+	<td><img src="/images/glyph/{{ glyph.id }}" width="39" height="39" valign="middle"></td>
+	<td class="char">{% if glyph.char %}{{ glyph.char|escape }}{% endif %}</td>
 	<td>{{ glyph.htmlEscape|escape }}</td>
 	<td>{{ glyph.name }}</td>
 	</tr>
