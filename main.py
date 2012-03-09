@@ -15,6 +15,8 @@ from urlparse import urlparse;
 from google.appengine.api import users
 from google.appengine.api import urlfetch
 from google.appengine.api import memcache
+from google.appengine.api import datastore
+from google.appengine.api import datastore_errors
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
@@ -198,7 +200,8 @@ class MainPage(webapp.RequestHandler):
     def get(self):       
         top_chars = [unicode_data.get_data(x, False) for x in 
                       [0x2603, 0x2602, 0x2620, 0x2622, 0x3020, 0x2368, 0xFDFA,
-                       0x0E5B, 0x2619, 0x2764, 0x203D, 0x0F12, 0x0F17]]
+                       0x1F46F, 0x0E5B, 0x2619, 0x2764, 0x203D, 0x0F12, 0x0F17, 
+                       0x1F4B8]]
         template_values = { 'top_chars': top_chars }
         
         path = os.path.join(os.path.dirname(__file__), 'templates/index.html')
@@ -273,6 +276,14 @@ class SavePage(webapp.RequestHandler):
 
 class GlyphImage(webapp.RequestHandler):
     def get(self, glyphNumber):
+
+        try:
+            entity = datastore.Get(db.Key.from_path("glyph", glyphNumber))
+            self.response.out.write(entity['data'])
+            self.response.headers['Content-Type'] = 'image/png'
+            return
+        except datastore_errors.EntityNotFoundError:
+            pass
         
         segment = (int(glyphNumber) // IMAGE_BUNDLE_SIZE) * IMAGE_BUNDLE_SIZE
         self.response.headers['Content-Type'] = 'image/png'
