@@ -223,7 +223,11 @@ class MainPage(webapp.RequestHandler):
         
         path = os.path.join(os.path.dirname(__file__), 'templates/index.html')
         self.response.headers['Content-Type'] = 'text/html; charset=utf-8';
+        self.response.headers['Cache-Control'] = 'public, max-age=600000, s-maxage=600000'
+        self.response.headers['Pragma'] = 'Public'
+
         rendered_front_page = loader.render_to_string(path, template_values)
+
         self.response.out.write(rendered_front_page)
 
 
@@ -236,6 +240,8 @@ class HtmlEntitiesPage(webapp.RequestHandler):
         
         path = os.path.join(os.path.dirname(__file__), 'templates/htmlentities.html')
         self.response.headers['Content-Type'] = 'text/html; charset=utf-8';
+        self.response.headers['Cache-Control'] = 'public, max-age=600000, s-maxage=600000'
+        self.response.headers['Pragma'] = 'Public'
         rendered_front_page = loader.render_to_string(path, template_values)
         self.response.out.write(rendered_front_page)
 
@@ -258,6 +264,8 @@ class BlockPage(webapp.RequestHandler):
         
         path = os.path.join(os.path.dirname(__file__), 'templates/block.html')
         self.response.headers['Content-Type'] = 'text/html; charset=utf-8';
+        self.response.headers['Cache-Control'] = 'public, max-age=600000, s-maxage=600000'
+        self.response.headers['Pragma'] = 'Public'
         rendered_front_page = loader.render_to_string(path, template_values)
         self.response.out.write(rendered_front_page)
 
@@ -277,6 +285,8 @@ class GlyphPage(webapp.RequestHandler):
 
         path = os.path.join(os.path.dirname(__file__), 'templates/glyph.html')
         self.response.headers['Content-Type'] = 'text/html; charset=utf-8';
+        self.response.headers['Cache-Control'] = 'public, max-age=600000, s-maxage=600000'
+        self.response.headers['Pragma'] = 'Public'
         rendered_front_page = loader.render_to_string(path, template_values)
         self.response.out.write(rendered_front_page)
 
@@ -293,12 +303,22 @@ class SavePage(webapp.RequestHandler):
 
 class GlyphImage(webapp.RequestHandler):
     def get(self, glyphNumber):
+        self.response.headers['Content-Type'] = 'image/png'
+        self.response.headers['Cache-Control'] = 'public, max-age=600000, s-maxage=600000'
+        self.response.headers['Pragma'] = 'Public'
+
+        data = memcache.get("glyph" + glyphNumber)
+        if data == "none":
+            self.response.out.write(open("images/no-glyph.png", "rb").read())
+            return
+        elif data:
+            self.response.out.write(data)
+            return
 
         try:
             entity = datastore.Get(db.Key.from_path("glyph", glyphNumber))
+            memcache.set("glyph" + glyphNumber, entity['data'])
             self.response.out.write(entity['data'])
-            self.response.headers['Content-Type'] = 'image/png'
-            self.response.headers['Cache-Control'] = 'public, max-age=600'
             return
         except datastore_errors.EntityNotFoundError:
             pass
@@ -315,11 +335,14 @@ class GlyphImage(webapp.RequestHandler):
                 
         if image_zips[segment]:
             try:
-                self.response.out.write(image_zips[segment].get_data("%s.png" % (glyphNumber)))
+                data = image_zips[segment].get_data("%s.png" % (glyphNumber))
+                memcache.set("glyph" + glyphNumber, data)
+                self.response.out.write(data)
                 return
             except IOError:
                 pass
 
+        memcache.set("glyph" + glyphNumber, "none")
         self.response.out.write(open("images/no-glyph.png", "rb").read())
 
 class Error404(webapp.RequestHandler):
