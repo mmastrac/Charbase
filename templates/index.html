@@ -25,8 +25,16 @@
 	<div class="description span-5 box last">
 		<p>Charbase is a visual database of characters from the Unicode 6.1 standard, made available 
 		without clutter.</p>
-		<script type="text/javascript" src="http://tweetmeme.com/i/scripts/button.js"></script>
+<p>
+<a href="http://www.amazon.com/gp/product/059610121X/ref=as_li_ss_il?ie=UTF8&camp=1789&creative=390957&creativeASIN=059610121X&linkCode=as2&tag=grack-20"><img border="0" src="static/book1.jpg" ></a><img src="http://www.assoc-amazon.com/e/ir?t=grack-20&l=as2&o=1&a=059610121X" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;" /></a>
+<a href="http://www.amazon.com/gp/product/0321480910/ref=as_li_ss_il?ie=UTF8&camp=1789&creative=390957&creativeASIN=0321480910&linkCode=as2&tag=grack-20"><img border="0" src="static/book2.jpg" ></a><img src="http://www.assoc-amazon.com/e/ir?t=grack-20&l=as2&o=1&a=0321480910" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;" /></a>
+<a href="http://www.amazon.com/gp/product/0201700522/ref=as_li_ss_il?ie=UTF8&camp=1789&creative=390957&creativeASIN=0201700522&linkCode=as2&tag=grack-20"><img border="0" src="static/book3.jpg" ></a><img src="http://www.assoc-amazon.com/e/ir?t=grack-20&l=as2&o=1&a=0201700522" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;" />
+<a href="http://www.amazon.com/gp/product/0596102429/ref=as_li_ss_il?ie=UTF8&camp=1789&creative=390957&creativeASIN=0596102429&linkCode=as2&tag=grack-20"><img border="0" src="static/book4.jpg" ></a><img src="http://www.assoc-amazon.com/e/ir?t=grack-20&l=as2&o=1&a=0596102429" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;" />
+</p><hr>
+<a href="https://twitter.com/share" class="twitter-share-button" data-via="mmastrac">Tweet</a>
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
 		<g:plusone size="tall"></g:plusone>
+
 
 <!-- Place this render call where appropriate -->
 <script type="text/javascript">
@@ -37,7 +45,15 @@
   })();
 </script>
 	</div>
+
 	<h2>Popular Unicode Characters</h2>
+
+	<table class="top-blocks">
+	{% for block in suggested_blocks %}
+	<tr><td><a href="{{ block.link }}">{{ block.name }}</a></td></tr>
+	{% endfor %}
+	<tr><td><a href="/block">More blocks...</a></td></tr>
+	</table>
 	
 	<table class="top-characters">
 	{% for glyph in top_chars %}

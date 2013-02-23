@@ -8,6 +8,8 @@ import base64
 import zipimport
 import urllib
 import htmlentitydefs
+import gzip
+import pickle
 
 from datetime import datetime;
 from urlparse import urlparse;
@@ -92,6 +94,8 @@ class UnicodeData():
         for key in unicode_data:
             memcache.add("cached_unicode_data.%s.%s" % (RANGE_SIZE, key), unicode_data[key], MEMCACHE_DATA_TIMEOUT)
         self.cached_unicode_data = unicode_data
+        if not self.cached_unicode_data.has_key(range):
+            self.cached_unicode_data[range] = {}
         return self.cached_unicode_data[range]
 
     def get_unicode_classes(self):
@@ -126,6 +130,32 @@ class UnicodeData():
             
         return self.cached_unicode_blocks
     
+    def get_blocks(self):
+        blocks = []
+        for entry in self.get_unicode_blocks():
+            blocks.append({"name": entry[2], "link": "/block/%s" % self.name_to_slug(entry[2])})
+        return blocks
+
+    def get_block(self, slug):
+        block = memcache.get("compressed_block_data.%s" % slug)
+        if block:
+            return pickle.loads(gzip.zlib.decompress(block))
+
+        for block in unicode_data.get_unicode_blocks():
+            slug_check = unicode_data.name_to_slug(block[2])
+            if slug_check == slug:
+                found = block
+                break
+        
+        if not found:
+            return None
+        
+        entities = [unicode_data.get_data(x, False) for x in range(block[0], block[1] + 1)]
+        entities = [x for x in entities if x['name'] != "INVALID CHARACTER"]
+        block = {"entities": entities, "block": block[2], "start": block[0], "end": block[1]}
+        memcache.add("compressed_block_data.%s" % slug, gzip.zlib.compress(pickle.dumps(block)), MEMCACHE_DATA_TIMEOUT)
+        return block
+
     def get_cjk_definitions(self):
         if not self.cached_cjk_definitions:            
             self.cached_cjk_definitions = memcache.get("cached_cjk_definitions")
@@ -219,7 +249,9 @@ class MainPage(webapp.RequestHandler):
                       [0x2603, 0x2602, 0x2620, 0x2622, 0x3020, 0x2368, 0xFDFA,
                        0x1F46F, 0x0E5B, 0x2619, 0x2764, 0x203D, 0x0F12, 0x0F17, 
                        0x1F4B8]]
-        template_values = { 'top_chars': top_chars }
+        suggested_blocks = [{"name": x, "link": "/block/%s" % unicode_data.name_to_slug(x)} for x in ["Emoticons", "Arabic", "Box Drawing", 
+            "Miscellaneous Symbols", "Miscellaneous Symbols And Pictographs"]]
+        template_values = { 'top_chars': top_chars, "suggested_blocks": suggested_blocks }
         
         path = os.path.join(os.path.dirname(__file__), 'templates/index.html')
         self.response.headers['Content-Type'] = 'text/html; charset=utf-8';
@@ -245,6 +277,14 @@ class HtmlEntitiesPage(webapp.RequestHandler):
         rendered_front_page = loader.render_to_string(path, template_values)
         self.response.out.write(rendered_front_page)
 
+class BlocksPage(webapp.RequestHandler):
+    def get(self):
+        template_values = { 'blocks': unicode_data.get_blocks() }
+        
+        path = os.path.join(os.path.dirname(__file__), 'templates/blocks.html')
+        self.response.headers['Content-Type'] = 'text/html; charset=utf-8';
+        rendered_front_page = loader.render_to_string(path, template_values)
+        self.response.out.write(rendered_front_page)      
 
 class BlockPage(webapp.RequestHandler):
     def get(self, slug):     
@@ -354,6 +394,7 @@ application = webapp.WSGIApplication(
                                      [
                                       ('/', MainPage),
                                       ('/html-entities', HtmlEntitiesPage),
+                                      ('/block', BlocksPage),
                                       ('/block/(.*)', BlockPage),
                                       ('/save', SavePage),
                                       (r'/images/glyph/([0-9]+)', GlyphImage),

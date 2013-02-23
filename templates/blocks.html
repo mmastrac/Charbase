@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Charbase: A visual unicode database</title>
+	<link rel="stylesheet" type="text/css" href="static/iphone.css" media="only screen and (max-device-width: 480px)" />
+	<link rel="stylesheet" type="text/css" href="static/desktop.css" media="screen and (min-device-width: 481px)" />
+	<!--[if IE]>
+	<link rel="stylesheet" type="text/css" href="static/desktop.css" media="all" />
+	<![endif]-->
+
+	<meta name="viewport" content="user-scalable=no, width=device-width" />
+	<meta name="google-site-verification" content="jiTzgY44zG-SxbXJSbi4wlOOVITXOULMaACbB6vPsWg" />
+</head>
+<body>
+	<div id="header">
+	<h1><a href="/">Charbase</a></h1>
+	<h2>A visual unicode database</h2>
+	<form method="GET" action="/" onsubmit="location.href='http://google.com/search?q=site:charbase.com+'+encodeURIComponent(document.getElementById('search').value); return false;">
+		<input class="search" type="search" name="search" id="search" results="5" value="{{ search|escape }}" placeholder="Search" />
+	</form>
+	</div>
+	
+	<div id="main">
+
+	<div class="description span-5 box last">
+		<p>Unicode defines <b>{{ blocks|length }}</b> blocks of related characters.</p>
+		<script type="text/javascript" src="http://tweetmeme.com/i/scripts/button.js"></script>
+		<g:plusone size="tall"></g:plusone>
+
+<!-- Place this render call where appropriate -->
+<script type="text/javascript">
+  (function() {
+    var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+    po.src = 'https://apis.google.com/js/plusone.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+  })();
+</script>
+	</div>
+	<h2>Blocks</h2>
+	
+	<table class="blocks">
+	{% for block in blocks %}
+	<tr><td><a href="{{ block.link }}">{{ block.name|escape }}</a></td></tr>
+	{% endfor %}
+	</table>
+	
+	<div class="clear"></div>
+	</div>
+	
+    <div id="footer">
+    <p><a href="https://spreadsheets.google.com/viewform?formkey=dG53SmctNTJQRzkzYU1mSGxOVWJLVVE6MA">Contact Us</a></p>
+    </div>
+	
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-198407-6']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(ga);
+  })();
+</script>
+	
+</body>
+</html>
