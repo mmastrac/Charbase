@@ -34,6 +34,7 @@ MEMCACHE_DATA_TIMEOUT = 24 * 60 * 60
 MEMCACHE_PAGE_TIMEOUT = 24 * 60 * 60
 
 image_zips = {}
+image_zip_lock = threading.Lock()
 
 # No idea why this is needed. AppEngine's version of Django templates is wonky.
 try:
@@ -370,25 +371,26 @@ class GlyphImage(webapp2.RequestHandler):
             return
         except datastore_errors.EntityNotFoundError:
             pass
-        
+
         segment = (int(glyphNumber) // IMAGE_BUNDLE_SIZE) * IMAGE_BUNDLE_SIZE
         self.response.headers['Content-Type'] = 'image/png'
-        
-        if not image_zips.has_key(segment):
-            file = "images/%s.zip" % segment
-            if os.path.exists(file):
-                image_zips[segment] = zipimport.zipimporter(file)
-            else:
-                image_zips[segment] = None
-                
-        if image_zips[segment]:
-            try:
-                data = image_zips[segment].get_data("%s.png" % (glyphNumber))
-                memcache.set("glyph" + glyphNumber, data)
-                self.response.out.write(data)
-                return
-            except IOError:
-                pass
+
+        with image_zip_lock:
+            if not image_zips.has_key(segment):
+                file = "images/%s.zip" % segment
+                if os.path.exists(file):
+                    image_zips[segment] = zipimport.zipimporter(file)
+                else:
+                    image_zips[segment] = None
+
+            if image_zips[segment]:
+                try:
+                    data = image_zips[segment].get_data("%s.png" % (glyphNumber))
+                    memcache.set("glyph" + glyphNumber, data)
+                    self.response.out.write(data)
+                    return
+                except IOError:
+                    pass
 
         memcache.set("glyph" + glyphNumber, "none")
         self.response.out.write(open("images/no-glyph.png", "rb").read())
