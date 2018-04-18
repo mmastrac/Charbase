@@ -23,11 +23,11 @@
 	<div id="main">
 
 	<div class="description span-5 box last">
-		<p>Unicode defines <b>{{ blocks|length }}</b> blocks of related characters.</p>
+		Unicode defines <b>{{ blocks|length }}</b> blocks of related characters.
 	</div>
 	<h2>Blocks</h2>
 	
-	<table class="blocks">
+	<table class="blocks clear span-14">
 	{% for block in blocks %}
 	<tr><td><a href="{{ block.link }}">{{ block.name|escape }}</a></td></tr>
 	{% endfor %}

@@ -37,14 +37,14 @@
 
 	<h2>Popular Unicode Characters</h2>
 
-	<table class="top-blocks">
+	<table class="top-blocks span-16">
 	{% for block in suggested_blocks %}
 	<tr><td><a href="{{ block.link }}">{{ block.name }}</a></td></tr>
 	{% endfor %}
 	<tr><td><a href="/block">More blocks...</a></td></tr>
 	</table>
 	
-	<table class="top-characters">
+	<table class="top-characters span-12 clear">
 	{% for glyph in top_chars %}
 	<tr><td class="char"><a href="{{ glyph.link }}"><img width="80" src="/images/glyph/{{ glyph.id }}"></a></td><td><a href="{{ glyph.link }}">{{ glyph.name }}</a></td></tr>
 	{% endfor %}

@@ -134,6 +134,7 @@ class UnicodeData():
         blocks = []
         for entry in self.get_unicode_blocks():
             blocks.append({"name": entry[2], "link": "/block/%s" % self.name_to_slug(entry[2])})
+        blocks.sort(key=lambda block: block['name'])
         return blocks
 
     def get_block(self, slug):
@@ -249,8 +250,8 @@ class MainPage(webapp.RequestHandler):
                       [0x2603, 0x2602, 0x2620, 0x2622, 0x3020, 0x2368, 0xFDFA,
                        0x1F46F, 0x0E5B, 0x2619, 0x2764, 0x203D, 0x0F12, 0x0F17, 
                        0x1F4B8]]
-        suggested_blocks = [{"name": x, "link": "/block/%s" % unicode_data.name_to_slug(x)} for x in ["Emoticons", "Arabic", "Box Drawing", 
-            "Miscellaneous Symbols", "Miscellaneous Symbols And Pictographs"]]
+        suggested_blocks = [{"name": x, "link": "/block/%s" % unicode_data.name_to_slug(x)} for x in ["Basic Latin", "Emoticons", "Arabic", 
+            "Box Drawing", "Miscellaneous Symbols", "Arrows", "Miscellaneous Symbols And Pictographs"]]
         template_values = { 'top_chars': top_chars, "suggested_blocks": suggested_blocks }
         
         path = os.path.join(os.path.dirname(__file__), 'templates/index.html')

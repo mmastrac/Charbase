@@ -264,6 +264,7 @@ body {
 	font-size: 12px;
 	padding: 2em;
 	background: #f9f9f9;
+	background: url(grey.png);
 }
 
 p {
@@ -354,7 +355,22 @@ a:visited {
 
 .description {
 	position: absolute;
-	right: 20px;
+	right: -20px;
+}
+
+.blocks *, .top-blocks * {
+	display: inline;
+	padding: 0;
+	margin: 0;
+}
+
+.blocks a, .top-blocks a {
+	font-size: 10px;
+	font-weight: bold;
+	background-color: #eee;
+	color: black;
+	padding: 0.2em 0.3em;
+	white-space: nowrap;
 }
 
 .top-characters {
