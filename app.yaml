@@ -15,9 +15,9 @@ handlers:
 - url: /robots.txt
   static_files: static/robots.txt
   upload: static/robots.txt
-  
+
 - url: /.*
-  script: main.py
+  script: main.app
 
 builtins:
 - remote_api: on

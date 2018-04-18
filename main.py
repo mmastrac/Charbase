@@ -14,13 +14,13 @@ import pickle
 from datetime import datetime;
 from urlparse import urlparse;
 
+import webapp2
+
 from google.appengine.api import users
 from google.appengine.api import urlfetch
 from google.appengine.api import memcache
 from google.appengine.api import datastore
 from google.appengine.api import datastore_errors
-from google.appengine.ext import webapp
-from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
 from google.appengine.ext import search
 
@@ -39,7 +39,7 @@ image_zips = {}
 try:
   # Bypass Django's safe_join for template paths since App Engine sandboxes the
   # filesystem anyway, and safe_join won't allow relative includes because
-  # webapp.template always sets the template's parent directory as the "root",
+  # webapp2.template always sets the template's parent directory as the "root",
   # rather than the app's real root directory.
   from django.utils import _os
   _os.safe_join = os.path.join
@@ -48,7 +48,7 @@ except ImportError:
 
 settings.configure(DEBUG=False, TEMPLATE_DIRS=(os.path.join(os.path.dirname(__file__), "templates")))
 
-class UnicodeData():     
+class UnicodeData():
     cached_unicode_data = {}
     cached_unicode_classes = None
     cached_cjk_definitions = None
@@ -244,7 +244,7 @@ class UnicodeData():
 unicode_data = UnicodeData()
 
 
-class MainPage(webapp.RequestHandler):
+class MainPage(webapp2.RequestHandler):
     def get(self):       
         top_chars = [unicode_data.get_data(x, False) for x in 
                       [0x2603, 0x2602, 0x2620, 0x2622, 0x3020, 0x2368, 0xFDFA,
@@ -264,7 +264,7 @@ class MainPage(webapp.RequestHandler):
         self.response.out.write(rendered_front_page)
 
 
-class HtmlEntitiesPage(webapp.RequestHandler):
+class HtmlEntitiesPage(webapp2.RequestHandler):
     def get(self):       
         keys = htmlentitydefs.codepoint2name.keys()
         keys.sort()
@@ -278,7 +278,7 @@ class HtmlEntitiesPage(webapp.RequestHandler):
         rendered_front_page = loader.render_to_string(path, template_values)
         self.response.out.write(rendered_front_page)
 
-class BlocksPage(webapp.RequestHandler):
+class BlocksPage(webapp2.RequestHandler):
     def get(self):
         template_values = { 'blocks': unicode_data.get_blocks() }
         
@@ -287,7 +287,7 @@ class BlocksPage(webapp.RequestHandler):
         rendered_front_page = loader.render_to_string(path, template_values)
         self.response.out.write(rendered_front_page)      
 
-class BlockPage(webapp.RequestHandler):
+class BlockPage(webapp2.RequestHandler):
     def get(self, slug):     
         found = None  
         for block in unicode_data.get_unicode_blocks():
@@ -310,7 +310,7 @@ class BlockPage(webapp.RequestHandler):
         rendered_front_page = loader.render_to_string(path, template_values)
         self.response.out.write(rendered_front_page)
 
-class GlyphPage(webapp.RequestHandler):
+class GlyphPage(webapp2.RequestHandler):
     def get(self, id, desc):
         try:
             id = int(id, 16)
@@ -332,7 +332,7 @@ class GlyphPage(webapp.RequestHandler):
         self.response.out.write(rendered_front_page)
 
 
-class SavePage(webapp.RequestHandler):
+class SavePage(webapp2.RequestHandler):
     def post(self):
         data = self.request.body
         data = data[data.find(',') + 1:]
@@ -342,7 +342,7 @@ class SavePage(webapp.RequestHandler):
         f.write(data)
         self.response.out.write("OK")
 
-class GlyphImage(webapp.RequestHandler):
+class GlyphImage(webapp2.RequestHandler):
     def get(self, glyphNumber):
         self.response.headers['Content-Type'] = 'image/png'
         self.response.headers['Cache-Control'] = 'public, max-age=600000, s-maxage=600000'
@@ -386,27 +386,19 @@ class GlyphImage(webapp.RequestHandler):
         memcache.set("glyph" + glyphNumber, "none")
         self.response.out.write(open("images/no-glyph.png", "rb").read())
 
-class Error404(webapp.RequestHandler):
+class Error404(webapp2.RequestHandler):
     def get(self):
         self.redirect('/')
         return
 
-application = webapp.WSGIApplication(
-                                     [
-                                      ('/', MainPage),
-                                      ('/html-entities', HtmlEntitiesPage),
-                                      ('/block', BlocksPage),
-                                      ('/block/(.*)', BlockPage),
-                                      ('/save', SavePage),
-                                      (r'/images/glyph/([0-9]+)', GlyphImage),
-                                      (r'/([a-z0-9A-Z]+)(-.*)?', GlyphPage),
-                                      ('/.*', Error404)
-                                     ],
-                                     debug=True)
-
-def main():
-    run_wsgi_app(application)
-
-if __name__ == "__main__":
-    main()
+app = webapp2.WSGIApplication([
+                              ('/', MainPage),
+                              ('/html-entities', HtmlEntitiesPage),
+                              ('/block', BlocksPage),
+                              ('/block/(.*)', BlockPage),
+                              ('/save', SavePage),
+                              (r'/images/glyph/([0-9]+)', GlyphImage),
+                              (r'/([a-z0-9A-Z]+)(-.*)?', GlyphPage),
+                              ('/.*', Error404)
+                             ])
 
