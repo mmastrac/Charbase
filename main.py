@@ -1,7 +1,6 @@
 import cgi
 import os
 import hmac
-import simplejson as json
 import re
 import logging
 import base64
@@ -10,6 +9,7 @@ import urllib
 import htmlentitydefs
 import gzip
 import pickle
+import threading
 
 from datetime import datetime;
 from urlparse import urlparse;
@@ -49,11 +49,12 @@ except ImportError:
 settings.configure(DEBUG=False, TEMPLATE_DIRS=(os.path.join(os.path.dirname(__file__), "templates")))
 
 class UnicodeData():
+    cache_lock = threading.RLock()
     cached_unicode_data = {}
     cached_unicode_classes = None
     cached_cjk_definitions = None
     cached_unicode_blocks = None
-    
+
     cached_unicode_zip = None
     cached_unihan_zip = None
 
@@ -61,75 +62,80 @@ class UnicodeData():
         return re.sub("(^-+)|(-+$)", "", re.sub("[^A-Za-z]+", "-", name)).lower();
 
     def get_unicode_zip(self):
-        if not self.cached_unicode_zip:
-            self.cached_unicode_zip = zipimport.zipimporter("UCD-6.1.0.zip")
-            
-        return self.cached_unicode_zip
+        with self.cache_lock:
+            if not self.cached_unicode_zip:
+                self.cached_unicode_zip = zipimport.zipimporter("UCD-6.1.0.zip")
+
+            return self.cached_unicode_zip
 
     def get_unihan_zip(self):
-        if not self.cached_unihan_zip:
-            self.cached_unihan_zip = zipimport.zipimporter("Unihan-6.1.0.zip")
-            
-        return self.cached_unihan_zip
+        with self.cache_lock:
+            if not self.cached_unihan_zip:
+                self.cached_unihan_zip = zipimport.zipimporter("Unihan-6.1.0.zip")
+
+            return self.cached_unihan_zip
 
     def get_unicode_data(self, id):
-        RANGE_SIZE = 30000
-        range = id // RANGE_SIZE
-        
-        if self.cached_unicode_data.has_key(range):
-            return self.cached_unicode_data[range]
-        
-        self.cached_unicode_data[range] = memcache.get("cached_unicode_data.%s.%s" % (RANGE_SIZE, range))
-        if self.cached_unicode_data[range]:
-            return self.cached_unicode_data[range]
-        
-        unicode_data = {}
-        for line in self.get_unicode_zip().get_data("UnicodeData.txt").split('\n'):
-            if len(line) > 0:
-                id = int(line[:line.find(';')], 16)
-                if not unicode_data.has_key(id // RANGE_SIZE):
-                    unicode_data[id // RANGE_SIZE] = {}
-                unicode_data[id // RANGE_SIZE][id] = line
+        with self.cache_lock:
+            RANGE_SIZE = 30000
+            range = id // RANGE_SIZE
 
-        for key in unicode_data:
-            memcache.add("cached_unicode_data.%s.%s" % (RANGE_SIZE, key), unicode_data[key], MEMCACHE_DATA_TIMEOUT)
-        self.cached_unicode_data = unicode_data
-        if not self.cached_unicode_data.has_key(range):
-            self.cached_unicode_data[range] = {}
-        return self.cached_unicode_data[range]
+            if self.cached_unicode_data.has_key(range):
+                return self.cached_unicode_data[range]
+
+            self.cached_unicode_data[range] = memcache.get("cached_unicode_data.%s.%s" % (RANGE_SIZE, range))
+            if self.cached_unicode_data[range]:
+                return self.cached_unicode_data[range]
+
+            unicode_data = {}
+            for line in self.get_unicode_zip().get_data("UnicodeData.txt").split('\n'):
+                if len(line) > 0:
+                    id = int(line[:line.find(';')], 16)
+                    if not unicode_data.has_key(id // RANGE_SIZE):
+                        unicode_data[id // RANGE_SIZE] = {}
+                    unicode_data[id // RANGE_SIZE][id] = line
+
+            for key in unicode_data:
+                memcache.add("cached_unicode_data.%s.%s" % (RANGE_SIZE, key), unicode_data[key], MEMCACHE_DATA_TIMEOUT)
+            self.cached_unicode_data = unicode_data
+            if not self.cached_unicode_data.has_key(range):
+                self.cached_unicode_data[range] = {}
+            return self.cached_unicode_data[range]
 
     def get_unicode_classes(self):
-        if not self.cached_unicode_classes:
-            self.cached_unicode_classes = memcache.get("cached_unicode_classes")
-            if self.cached_unicode_classes:
-                return self.cached_unicode_classes
-            unicode_classes = {}
-            for line in self.get_unicode_zip().get_data("PropertyValueAliases.txt").split('\n'):
-                if line[:4] == "gc ;":
-                    unicode_classes[line[5:7].strip()] = line.split("; ")[2].strip().replace("_", " ")
-            self.cached_unicode_classes = unicode_classes
-            memcache.add("cached_unicode_classes", self.cached_unicode_classes, MEMCACHE_DATA_TIMEOUT)
-            
-        return self.cached_unicode_classes 
+        with self.cache_lock:
+            if not self.cached_unicode_classes:
+                self.cached_unicode_classes = memcache.get("cached_unicode_classes")
+                if self.cached_unicode_classes:
+                    return self.cached_unicode_classes
+                unicode_classes = {}
+                for line in self.get_unicode_zip().get_data("PropertyValueAliases.txt").split('\n'):
+                    if line[:4] == "gc ;":
+                        unicode_classes[line[5:7].strip()] = line.split("; ")[2].strip().replace("_", " ")
+                self.cached_unicode_classes = unicode_classes
+                memcache.add("cached_unicode_classes", self.cached_unicode_classes, MEMCACHE_DATA_TIMEOUT)
+
+            return self.cached_unicode_classes 
 
     def get_unicode_blocks(self):
-        if not self.cached_unicode_blocks:
-            self.cached_unicode_blocks = memcache.get("cached_unicode_blocks")
-            if self.cached_unicode_blocks:
-                return self.cached_unicode_blocks
-            unicode_blocks = []
-            for line in self.get_unicode_zip().get_data("Blocks.txt").split('\n'):
-                if len(line) > 0 and line[0] != "#" and line[0] != " ":
-                    semi_split = line.split("; ")
-                    name = semi_split[1]
-                    range = semi_split[0].split(r"..")
-                    unicode_blocks.append([int(range[0], 16), int(range[1], 16), name])
-                    
-            self.cached_unicode_blocks = unicode_blocks
-            memcache.add("cached_unicode_blocks", self.cached_unicode_blocks, MEMCACHE_DATA_TIMEOUT)
-            
-        return self.cached_unicode_blocks
-    
+        with self.cache_lock:
+            if not self.cached_unicode_blocks:
+                self.cached_unicode_blocks = memcache.get("cached_unicode_blocks")
+                if self.cached_unicode_blocks:
+                    return self.cached_unicode_blocks
+                unicode_blocks = []
+                for line in self.get_unicode_zip().get_data("Blocks.txt").split('\n'):
+                    if len(line) > 0 and line[0] != "#" and line[0] != " ":
+                        semi_split = line.split("; ")
+                        name = semi_split[1]
+                        range = semi_split[0].split(r"..")
+                        unicode_blocks.append([int(range[0], 16), int(range[1], 16), name])
+
+                self.cached_unicode_blocks = unicode_blocks
+                memcache.add("cached_unicode_blocks", self.cached_unicode_blocks, MEMCACHE_DATA_TIMEOUT)
+
+            return self.cached_unicode_blocks
+
     def get_blocks(self):
         blocks = []
         for entry in self.get_unicode_blocks():
@@ -147,10 +153,10 @@ class UnicodeData():
             if slug_check == slug:
                 found = block
                 break
-        
+
         if not found:
             return None
-        
+
         entities = [unicode_data.get_data(x, False) for x in range(block[0], block[1] + 1)]
         entities = [x for x in entities if x['name'] != "INVALID CHARACTER"]
         block = {"entities": entities, "block": block[2], "start": block[0], "end": block[1]}
@@ -158,19 +164,20 @@ class UnicodeData():
         return block
 
     def get_cjk_definitions(self):
-        if not self.cached_cjk_definitions:            
-            self.cached_cjk_definitions = memcache.get("cached_cjk_definitions")
-            if self.cached_cjk_definitions:
-                return self.cached_cjk_definitions
-            cjk_definitions = {}
-            for line in self.get_unihan_zip().get_data("Unihan_Readings.txt").split('\n'):
-                bits = re.split(r"\s+", line, 2)
-                if len(bits) > 2 and bits[1] == "kDefinition":
-                    cjk_definitions[int(bits[0][2:], 16)] = bits[2]
-            self.cached_cjk_definitions = cjk_definitions
-            memcache.add("cached_cjk_definitions", self.cached_cjk_definitions, MEMCACHE_DATA_TIMEOUT)
-                    
-        return self.cached_cjk_definitions
+        with self.cache_lock:
+            if not self.cached_cjk_definitions:
+                self.cached_cjk_definitions = memcache.get("cached_cjk_definitions")
+                if self.cached_cjk_definitions:
+                    return self.cached_cjk_definitions
+                cjk_definitions = {}
+                for line in self.get_unihan_zip().get_data("Unihan_Readings.txt").split('\n'):
+                    bits = re.split(r"\s+", line, 2)
+                    if len(bits) > 2 and bits[1] == "kDefinition":
+                        cjk_definitions[int(bits[0][2:], 16)] = bits[2]
+                self.cached_cjk_definitions = cjk_definitions
+                memcache.add("cached_cjk_definitions", self.cached_cjk_definitions, MEMCACHE_DATA_TIMEOUT)
+
+            return self.cached_cjk_definitions
 
     def unichr(self, id):
         return eval('u"\U%08x"' % id)

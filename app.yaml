@@ -2,7 +2,7 @@ application: unicode-library-hrd
 version: 1
 runtime: python27
 api_version: 1
-threadsafe: no
+threadsafe: yes
 
 handlers:
 - url: /static
@@ -21,4 +21,3 @@ handlers:
 
 builtins:
 - remote_api: on
-
