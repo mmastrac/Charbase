@@ -24,8 +24,8 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
 from google.appengine.ext import search
 
-from google.appengine.dist import use_library
-use_library('django', '1.2')
+import django
+
 from django.template import loader
 from django.conf import settings
 
